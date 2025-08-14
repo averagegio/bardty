@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Hls from "hls.js";
+import MuxPlayer from "@mux/mux-player-react";
 
 export default function LiveClient() {
   const [messages, setMessages] = useState([
@@ -41,23 +41,7 @@ export default function LiveClient() {
     ],
   };
 
-  useEffect(() => {
-    const muxPlaybackId = searchParams.get("playback_id") || process.env.NEXT_PUBLIC_MUX_PLAYBACK_ID || "";
-    const hlsUrlEnv = process.env.NEXT_PUBLIC_HLS_URL || "";
-    const hlsUrl = muxPlaybackId ? `https://stream.mux.com/${muxPlaybackId}.m3u8` : hlsUrlEnv;
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (hlsUrl) {
-      if (Hls.isSupported()) {
-        const hls = new Hls({ enableWorker: true });
-        hls.loadSource(hlsUrl);
-        hls.attachMedia(video);
-      } else if (video.canPlayType("application/vnd.apple.mpegURL")) {
-        video.src = hlsUrl;
-      }
-    }
-  }, [searchParams]);
+  const playbackId = (searchParams.get("playback_id") || process.env.NEXT_PUBLIC_MUX_PLAYBACK_ID || "");
 
   useEffect(() => {
     if (chatRef.current) {
@@ -144,7 +128,19 @@ export default function LiveClient() {
       <div className="grid lg:grid-cols-[1fr_340px] gap-6">
         <section className="rounded-lg border border-black/[.08] dark:border-white/[.145] overflow-hidden">
           <div className="aspect-video bg-black">
-            <video ref={videoRef} controls playsInline className="w-full h-full" poster="/bardtylogo.jpg" />
+            {playbackId ? (
+              <MuxPlayer
+                streamType="live"
+                playbackId={playbackId}
+                autoPlay
+                muted
+                poster="/bardtylogo.jpg"
+                style={{ width: "100%", height: "100%" }}
+                primaryColor="#ff4dd2"
+              />
+            ) : (
+              <video ref={videoRef} controls playsInline className="w-full h-full" poster="/bardtylogo.jpg" />
+            )}
           </div>
           <div className="p-4 grid gap-2">
             <div className="text-sm text-foreground/70">Featured Product</div>
