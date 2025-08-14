@@ -19,3 +19,24 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Mobile optimizations */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Improve scroll and touch behavior on iOS/Android */
+html, body {
+  overscroll-behavior-y: contain;
+  touch-action: manipulation;
+}
+
+/* Utility for sticky bottom bars on mobile if needed */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}

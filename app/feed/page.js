@@ -44,7 +44,7 @@ export default function FeedPage() {
     <div ref={containerRef} className="grid gap-4">
       <h1 className="text-xl font-semibold">Interactive Feed</h1>
       <p className="text-sm text-foreground/70">Swipe/scroll through shoppable posts.</p>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {posts.map((post) => {
           const isLiked = likedPostIds.has(post.id);
           return (
@@ -52,7 +52,7 @@ export default function FeedPage() {
               <div className="aspect-[4/5] relative bg-foreground/5">
                 <Image src="/next.svg" alt="Post media" fill className="object-contain p-10 dark:invert" />
               </div>
-              <div className="p-4 grid gap-2">
+              <div className="p-3 sm:p-4 grid gap-2">
                 <div className="text-sm text-foreground/70">{post.creator}</div>
                 <div className="font-medium">{post.title}</div>
                 <div className="flex items-center justify-between pt-1">
@@ -63,7 +63,7 @@ export default function FeedPage() {
                   <button
                     onClick={() => toggleLike(post.id)}
                     aria-pressed={isLiked}
-                    className={`rounded-md px-3 py-1 text-xs border transition-colors ${
+                    className={`rounded-md px-2.5 sm:px-3 py-1 text-xs border transition-colors ${
                       isLiked
                         ? "bg-foreground text-background border-transparent"
                         : "border-black/[.08] dark:border-white/[.145] hover:bg-foreground/5"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Hls from "hls.js";
 
 // Live page with HLS playback and basic SSE chat
@@ -13,6 +13,34 @@ export default function LivePage() {
   const chatRef = useRef(null);
   const videoRef = useRef(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const categories = [
+    { slug: "retail", label: "Retail" },
+    { slug: "furniture", label: "Furniture" },
+    { slug: "skills", label: "Skills" },
+    { slug: "real-estate", label: "Real Estate" },
+  ];
+  const selectedCat = searchParams.get("cat") || categories[0].slug;
+
+  const MOCK_CHANNELS = {
+    "retail": [
+      { id: "r1", title: "Daily Deals", playbackId: "" },
+      { id: "r2", title: "Streetwear Drops", playbackId: "" },
+    ],
+    "furniture": [
+      { id: "f1", title: "Cozy Living Room", playbackId: "" },
+      { id: "f2", title: "Minimalist Office", playbackId: "" },
+    ],
+    "skills": [
+      { id: "s1", title: "DIY Woodwork", playbackId: "" },
+      { id: "s2", title: "Quick Cooking Hacks", playbackId: "" },
+    ],
+    "real-estate": [
+      { id: "re1", title: "Open House Tour", playbackId: "" },
+      { id: "re2", title: "Market Watch", playbackId: "" },
+    ],
+  };
 
   useEffect(() => {
     const muxPlaybackId = searchParams.get("playback_id") || process.env.NEXT_PUBLIC_MUX_PLAYBACK_ID || "";
@@ -34,7 +62,7 @@ export default function LivePage() {
         video.src = hlsUrl;
       }
     }
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (chatRef.current) {
@@ -99,10 +127,31 @@ export default function LivePage() {
   }
 
   return (
-    <div className="grid lg:grid-cols-[1fr_340px] gap-6">
+    <div className="grid gap-4">
+      <div className="flex items-center gap-2 border-b border-black/[.08] dark:border-white/[.145] overflow-x-auto">
+        {categories.map((cat) => (
+          <button
+            key={cat.slug}
+            role="tab"
+            aria-selected={selectedCat === cat.slug}
+            onClick={() => {
+              const params = new URLSearchParams(Array.from(searchParams.entries()));
+              params.set("cat", cat.slug);
+              router.push(`/live?${params.toString()}`);
+            }}
+            className={`px-3 py-2 text-sm border-b-2 -mb-px ${
+              selectedCat === cat.slug ? "border-foreground font-medium" : "border-transparent text-foreground/70 hover:text-foreground"
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid lg:grid-cols-[1fr_340px] gap-6">
       <section className="rounded-lg border border-black/[.08] dark:border-white/[.145] overflow-hidden">
-        <div className="aspect-video bg-black">
-          <video ref={videoRef} controls className="w-full h-full" poster="/bardtylogo.jpg" />
+          <div className="aspect-video bg-black">
+            <video ref={videoRef} controls playsInline className="w-full h-full" poster="/bardtylogo.jpg" />
         </div>
         <div className="p-4 grid gap-2">
           <div className="text-sm text-foreground/70">Featured Product</div>
@@ -115,6 +164,28 @@ export default function LivePage() {
             <button onClick={() => addToCart("Bardty Hoodie")} className="rounded-md border border-black/[.08] dark:border-white/[.145] px-4 py-2 text-sm font-medium hover:bg-foreground/5">Add to Cart</button>
           </div>
         </div>
+          <div className="p-4">
+            <div className="text-sm font-medium mb-3">Live now in {categories.find(c => c.slug === selectedCat)?.label}</div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {(MOCK_CHANNELS[selectedCat] || []).map((ch) => (
+                <div key={ch.id} className="rounded-md border border-black/[.08] dark:border-white/[.145] p-3 grid gap-2">
+                  <div className="aspect-video bg-foreground/10 rounded" />
+                  <div className="text-sm font-medium truncate">{ch.title}</div>
+                  <button
+                    className="rounded-md border px-3 py-1 text-xs hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145]"
+                    onClick={() => {
+                      const params = new URLSearchParams(Array.from(searchParams.entries()));
+                      if (ch.playbackId) params.set("playback_id", ch.playbackId);
+                      params.set("cat", selectedCat);
+                      router.push(`/live?${params.toString()}`);
+                    }}
+                  >
+                    Watch
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
       </section>
 
       <aside className="rounded-lg border border-black/[.08] dark:border-white/[.145] flex flex-col min-h-[60vh]">
@@ -137,6 +208,7 @@ export default function LivePage() {
           <button onClick={sendMessage} className="rounded-md bg-foreground text-background px-4 py-2 text-sm font-medium">Send</button>
         </div>
       </aside>
+      </div>
     </div>
   );
 }
