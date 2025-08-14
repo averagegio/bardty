@@ -39,6 +39,7 @@ export default function RootLayout({ children }) {
               <span className="font-semibold text-lg tracking-tight">bardty</span>
             </Link>
             <nav className="flex items-center gap-4 text-sm">
+              <Link className="hover:underline" href="/marketplace">Marketplace</Link>
               <Link className="hover:underline" href="/feed">Feed</Link>
               <Link className="hover:underline" href="/live">Live</Link>
               <Link className="hover:underline" href="/cart">Cart</Link>
