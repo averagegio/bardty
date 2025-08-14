@@ -8,8 +8,7 @@ export default function LiveClient() {
   const [messages, setMessages] = useState([
     { id: 1, user: "host", text: "Welcome to the Bardty live!" },
   ]);
-  const [input, setInput] = useState("
-");
+  const [input, setInput] = useState("");
   const chatRef = useRef(null);
   const videoRef = useRef(null);
   const searchParams = useSearchParams();
