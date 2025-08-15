@@ -9,6 +9,12 @@ export default function LiveClient() {
     { id: 1, user: "host", text: "Welcome to the Bardty live!" },
   ]);
   const [input, setInput] = useState("");
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState("login"); // 'login' | 'signup'
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [authUser, setAuthUser] = useState(null);
+  const [authForm, setAuthForm] = useState({ username: "", password: "" });
   const chatRef = useRef(null);
   const videoRef = useRef(null);
   const searchParams = useSearchParams();
@@ -48,6 +54,16 @@ export default function LiveClient() {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/login", { cache: "no-store" });
+        const data = await res.json();
+        if (data && data.authenticated) setAuthUser(data.user);
+      } catch {}
+    })();
+  }, []);
 
   useEffect(() => {
     const source = new EventSource("/api/chat");
@@ -103,9 +119,43 @@ export default function LiveClient() {
     });
   }
 
+  async function submitAuth() {
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      const endpoint = authMode === "signup" ? "/api/signup" : "/api/login";
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(authForm),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAuthError(data.error || "Authentication failed");
+        return;
+      }
+      // Refresh session
+      const meRes = await fetch("/api/login", { cache: "no-store" });
+      const me = await meRes.json().catch(() => ({}));
+      if (me && me.authenticated) setAuthUser(me.user);
+      setAuthOpen(false);
+    } catch (e) {
+      setAuthError("Network error");
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  async function logout() {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+      setAuthUser(null);
+    } catch {}
+  }
+
   return (
     <div className="grid gap-4">
-      <div className="flex items-center gap-2 border-b border-black/[.08] dark:border-white/[.145] overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-black/[.08] dark:border-white/[.145] flex-wrap">
         {categories.map((cat) => (
           <button
             key={cat.slug}
@@ -123,7 +173,70 @@ export default function LiveClient() {
             {cat.label}
           </button>
         ))}
+        <button
+          aria-label="Open menu"
+          onClick={() => setAuthOpen(true)}
+          className="ml-auto mr-2 rounded-md border px-3 py-1 text-xs hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145]"
+        >
+          ☰
+        </button>
       </div>
+
+      {authOpen && (
+        <>
+          <div
+            onClick={() => setAuthOpen(false)}
+            className="fixed inset-0 bg-black/30"
+          />
+          <div className="fixed inset-y-0 right-0 w-80 max-w-[90vw] bg-background border-l border-black/[.08] dark:border-white/[.145] shadow-lg flex flex-col">
+            <div className="p-3 border-b border-black/[.08] dark:border-white/[.145] flex items-center justify-between">
+              <div className="font-medium text-sm">{authUser ? 'Account' : (authMode === 'signup' ? 'Create account' : 'Login')}</div>
+              <button onClick={() => setAuthOpen(false)} className="text-sm opacity-70 hover:opacity-100">✕</button>
+            </div>
+
+            {authUser ? (
+              <div className="p-4 grid gap-3">
+                <div className="text-sm">Signed in as <span className="font-medium">{authUser.sub}</span></div>
+                <button onClick={logout} className="rounded-md border px-3 py-2 text-sm hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145]">Logout</button>
+              </div>
+            ) : (
+              <>
+                <div className="p-3 flex gap-2">
+                  <button
+                    className={`flex-1 rounded px-2 py-1 text-xs ${authMode === 'login' ? 'bg-foreground text-background' : 'border border-black/[.08] dark:border-white/[.145]'}`}
+                    onClick={() => setAuthMode('login')}
+                  >Login</button>
+                  <button
+                    className={`flex-1 rounded px-2 py-1 text-xs ${authMode === 'signup' ? 'bg-foreground text-background' : 'border border-black/[.08] dark:border-white/[.145]'}`}
+                    onClick={() => setAuthMode('signup')}
+                  >Signup</button>
+                </div>
+                <div className="p-4 grid gap-2">
+                  <input
+                    value={authForm.username}
+                    onChange={(e) => setAuthForm((f) => ({ ...f, username: e.target.value }))}
+                    placeholder="Username"
+                    className="rounded-md border border-black/[.08] dark:border-white/[.145] px-3 py-2 text-sm bg-background"
+                  />
+                  <input
+                    type="password"
+                    value={authForm.password}
+                    onChange={(e) => setAuthForm((f) => ({ ...f, password: e.target.value }))}
+                    placeholder="Password"
+                    className="rounded-md border border-black/[.08] dark:border-white/[.145] px-3 py-2 text-sm bg-background"
+                  />
+                  {authError ? <div className="text-xs text-red-600">{authError}</div> : null}
+                  <button
+                    disabled={authLoading}
+                    onClick={submitAuth}
+                    className="rounded-md bg-foreground text-background px-3 py-2 text-sm font-medium disabled:opacity-60"
+                  >{authLoading ? 'Please wait...' : (authMode === 'signup' ? 'Create account' : 'Login')}</button>
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
 
       <div className="grid lg:grid-cols-[1fr_340px] gap-6">
         <section className="rounded-lg border border-black/[.08] dark:border-white/[.145] overflow-hidden">

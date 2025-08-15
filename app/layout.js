@@ -43,6 +43,8 @@ export default function RootLayout({ children }) {
               <Link className="hover:underline" href="/feed">Feed</Link>
               <Link className="hover:underline" href="/live">Live</Link>
               <Link className="hover:underline" href="/cart">Cart</Link>
+              <Link className="hover:underline" href="/login">Login</Link>
+              <Link className="hover:underline" href="/signup">Signup</Link>
             </nav>
           </div>
         </header>
