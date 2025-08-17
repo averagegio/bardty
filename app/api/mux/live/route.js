@@ -8,8 +8,10 @@ const corsHeaders = {
 
 // Optional GET for health check (does not reveal secrets)
 export async function GET() {
-  const hasId = Boolean(process.env.MUX_TOKEN_ID);
-  const hasSecret = Boolean(process.env.MUX_TOKEN_SECRET);
+  const tokenId = process.env.MUX_TOKEN_ID_OVERRIDE || process.env.MUX_TOKEN_ID;
+  const tokenSecret = process.env.MUX_TOKEN_SECRET_OVERRIDE || process.env.MUX_TOKEN_SECRET;
+  const hasId = Boolean(tokenId);
+  const hasSecret = Boolean(tokenSecret);
   return Response.json(
     { ok: hasId && hasSecret, requires: ["POST"], hasId, hasSecret },
     { headers: corsHeaders }
@@ -18,8 +20,8 @@ export async function GET() {
 
 // Create a Mux Live Stream and return stream key and playback id
 export async function POST() {
-  const tokenId = process.env.MUX_TOKEN_ID;
-  const tokenSecret = process.env.MUX_TOKEN_SECRET;
+  const tokenId = process.env.MUX_TOKEN_ID_OVERRIDE || process.env.MUX_TOKEN_ID;
+  const tokenSecret = process.env.MUX_TOKEN_SECRET_OVERRIDE || process.env.MUX_TOKEN_SECRET;
   if (!tokenId || !tokenSecret) {
     return Response.json(
       { error: "Missing Mux credentials" },
