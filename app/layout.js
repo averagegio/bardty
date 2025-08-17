@@ -2,6 +2,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import "./globals.css";
+import dynamic from "next/dynamic";
+
+const RecordLiveButton = dynamic(() => import("./components/RecordLiveButton"), { ssr: false });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +48,7 @@ export default function RootLayout({ children }) {
               <Link className="hover:underline" href="/cart">Cart</Link>
               <Link className="hover:underline" href="/login">Login</Link>
               <Link className="hover:underline" href="/signup">Signup</Link>
+              <RecordLiveButton />
             </nav>
           </div>
         </header>

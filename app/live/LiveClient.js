@@ -15,6 +15,9 @@ export default function LiveClient() {
   const [authError, setAuthError] = useState("");
   const [authUser, setAuthUser] = useState(null);
   const [authForm, setAuthForm] = useState({ username: "", password: "" });
+  const [liveCreating, setLiveCreating] = useState(false);
+  const [liveError, setLiveError] = useState("");
+  const [liveInfo, setLiveInfo] = useState(null);
   const chatRef = useRef(null);
   const videoRef = useRef(null);
   const searchParams = useSearchParams();
@@ -119,6 +122,28 @@ export default function LiveClient() {
     });
   }
 
+  async function createLive() {
+    setLiveError("");
+    setLiveCreating(true);
+    try {
+      const res = await fetch("/api/mux/live", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.playback_id) {
+        setLiveError(data?.error || "Failed to create live stream");
+        return;
+      }
+      setLiveInfo(data);
+      const params = new URLSearchParams(Array.from(searchParams.entries()));
+      params.set("cat", selectedCat);
+      params.set("playback_id", data.playback_id);
+      router.push(`/live?${params.toString()}`);
+    } catch (e) {
+      setLiveError("Network error");
+    } finally {
+      setLiveCreating(false);
+    }
+  }
+
   async function submitAuth() {
     setAuthError("");
     setAuthLoading(true);
@@ -173,14 +198,42 @@ export default function LiveClient() {
             {cat.label}
           </button>
         ))}
+        {authUser ? (
+          <button
+            aria-label="Create live stream"
+            onClick={createLive}
+            disabled={liveCreating}
+            className="ml-auto rounded-md border px-3 py-1 text-xs hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145] disabled:opacity-60"
+          >{liveCreating ? 'Creating…' : 'Record'}</button>
+        ) : (
+          <span className="ml-auto text-xs text-foreground/60">Sign in to record</span>
+        )}
         <button
           aria-label="Open menu"
           onClick={() => setAuthOpen(true)}
-          className="ml-auto mr-2 rounded-md border px-3 py-1 text-xs hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145]"
+          className="mr-2 rounded-md border px-3 py-1 text-xs hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145]"
         >
           ☰
         </button>
       </div>
+
+      {liveInfo ? (
+        <div className="rounded-md border border-black/[.08] dark:border-white/[.145] p-3 text-xs grid gap-2">
+          <div className="font-medium">Ingest details</div>
+          <div>Server: <code className="opacity-80">rtmps://global-live.mux.com:443/app</code></div>
+          <div className="flex items-center gap-2">
+            <span>Stream key:</span>
+            <code className="truncate opacity-80">{liveInfo.stream_key}</code>
+            <button
+              onClick={() => navigator.clipboard?.writeText(liveInfo.stream_key)}
+              className="rounded-md border px-2 py-1 hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145]"
+            >Copy</button>
+          </div>
+          <div>Playback ID: <code className="opacity-80">{liveInfo.playback_id}</code></div>
+        </div>
+      ) : null}
+
+      {liveError ? <div className="text-xs text-red-600">{liveError}</div> : null}
 
       {authOpen && (
         <>
