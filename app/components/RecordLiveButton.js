@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function RecordLiveButton() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [creating, setCreating] = useState(false);
 
   async function onClick() {
@@ -14,9 +13,7 @@ export default function RecordLiveButton() {
       const res = await fetch("/api/mux/live", { method: "POST" });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.playback_id) {
-        const params = new URLSearchParams(Array.from(searchParams.entries()));
-        params.set("playback_id", data.playback_id);
-        router.push(`/live?${params.toString()}`);
+        router.push(`/live?playback_id=${data.playback_id}`);
       }
     } finally {
       setCreating(false);
