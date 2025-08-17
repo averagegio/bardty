@@ -51,6 +51,7 @@ export default function LiveClient() {
   };
 
   const playbackId = (searchParams.get("playback_id") || process.env.NEXT_PUBLIC_MUX_PLAYBACK_ID || "");
+  const [ingestInfo, setIngestInfo] = useState(null);
 
   useEffect(() => {
     if (chatRef.current) {
@@ -102,6 +103,17 @@ export default function LiveClient() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (!playbackId) return;
+      try {
+        const res = await fetch(`/api/mux/info?playback_id=${encodeURIComponent(playbackId)}`);
+        const data = await res.json().catch(() => null);
+        if (data && data.found) setIngestInfo(data.info);
+      } catch {}
+    })();
+  }, [playbackId]);
 
   async function sendMessage() {
     const text = input.trim();
@@ -290,6 +302,21 @@ export default function LiveClient() {
           </div>
         </>
       )}
+
+      {ingestInfo ? (
+        <div className="rounded-md border border-black/[.08] dark:border-white/[.145] p-3 text-xs grid gap-2">
+          <div className="font-medium">Ingest details</div>
+          <div>Server: <code className="opacity-80">rtmps://global-live.mux.com:443/app</code></div>
+          <div className="flex items-center gap-2">
+            <span>Stream key:</span>
+            <code className="truncate opacity-80">{ingestInfo.stream_key}</code>
+            <button
+              onClick={() => navigator.clipboard?.writeText(ingestInfo.stream_key)}
+              className="rounded-md border px-2 py-1 hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145]"
+            >Copy</button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="grid lg:grid-cols-[1fr_340px] gap-6">
         <section className="rounded-lg border border-black/[.08] dark:border-white/[.145] overflow-hidden">

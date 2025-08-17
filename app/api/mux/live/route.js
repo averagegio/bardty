@@ -1,4 +1,5 @@
 import Mux from "@mux/mux-node";
+import { redis } from "@/lib/redis";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,6 +47,16 @@ export async function POST() {
         { status: 502, headers: corsHeaders }
       );
     }
+    // Persist minimal details so the client can fetch ingest info after redirect
+    try {
+      await redis.hset(`mux:live:${playbackId}`, {
+        id,
+        stream_key,
+        playback_id: playbackId,
+        createdAt: String(Date.now()),
+      });
+      await redis.hset(`mux:live:latest`, { playback_id: playbackId });
+    } catch {}
     return Response.json(
       { id, stream_key, playback_id: playbackId },
       { headers: corsHeaders }
