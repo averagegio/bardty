@@ -2,9 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import "./globals.css";
-import dynamic from "next/dynamic";
-
-const RecordLiveButton = dynamic(() => import("./components/RecordLiveButton"), { ssr: false });
+import RecordLiveButton from "./components/RecordLiveButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
