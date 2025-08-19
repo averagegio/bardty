@@ -2,7 +2,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import "./globals.css";
-import RecordLiveButton from "./components/RecordLiveButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,13 +39,11 @@ export default function RootLayout({ children }) {
               <span className="font-semibold text-lg tracking-tight">bardty</span>
             </Link>
             <nav className="flex items-center gap-4 text-sm">
-              <Link className="hover:underline" href="/marketplace">Marketplace</Link>
               <Link className="hover:underline" href="/feed">Feed</Link>
               <Link className="hover:underline" href="/live">Live</Link>
               <Link className="hover:underline" href="/cart">Cart</Link>
               <Link className="hover:underline" href="/login">Login</Link>
               <Link className="hover:underline" href="/signup">Signup</Link>
-              <RecordLiveButton />
             </nav>
           </div>
         </header>

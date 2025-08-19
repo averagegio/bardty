@@ -39,7 +39,7 @@ export default function Home() {
           onClick={createLive}
           disabled={creating}
           className="rounded-md bg-foreground text-background px-4 py-2 text-sm font-medium disabled:opacity-60"
-        >{creating ? "Creating…" : "Record Live"}</button>
+        >{creating ? "Creating…" : "Create Stream"}</button>
         <button
           onClick={() => router.push("/live")}
           className="rounded-md border px-4 py-2 text-sm hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145]"
