@@ -1,43 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import BackgroundHeroVideo from "./components/BackgroundHeroVideo";
 
 export default function Home() {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState(null);
-  const heroVideoRef = useRef(null);
-
-  useEffect(() => {
-    const el = heroVideoRef.current;
-    if (!el) return;
-    el.muted = true;
-    el.playsInline = true;
-    const tryPlay = () => {
-      el.play().catch(() => {});
-    };
-    if (el.readyState >= 2) {
-      tryPlay();
-      return;
-    }
-    const onCanPlay = () => {
-      tryPlay();
-      el.removeEventListener("canplay", onCanPlay);
-      el.removeEventListener("canplaythrough", onCanPlay);
-      el.removeEventListener("loadedmetadata", onCanPlay);
-    };
-    el.addEventListener("canplay", onCanPlay);
-    el.addEventListener("canplaythrough", onCanPlay);
-    el.addEventListener("loadedmetadata", onCanPlay);
-    return () => {
-      el.removeEventListener("canplay", onCanPlay);
-      el.removeEventListener("canplaythrough", onCanPlay);
-      el.removeEventListener("loadedmetadata", onCanPlay);
-    };
-  }, []);
 
   async function createLive() {
     setError("");
@@ -60,7 +30,15 @@ export default function Home() {
 
   return (
     <>
-      <BackgroundHeroVideo />
+      {/* GIF hero */}
+      <section className="relative h-[50vh] sm:h-[60vh] rounded-lg overflow-hidden border border-black/[.08] dark:border-white/[.145] bg-black flex items-center justify-center">
+        <img
+          src="/bardty-prodgif.gif"
+          alt="Bardty preview"
+          className="max-w-full max-h-full object-contain pointer-events-none"
+        />
+        <div aria-hidden className="absolute inset-0 bg-black/20" />
+      </section>
 
       <div className="grid gap-6 max-w-xl">
       <div>
