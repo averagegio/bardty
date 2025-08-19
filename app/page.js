@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -8,6 +8,35 @@ export default function Home() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState(null);
+  const heroVideoRef = useRef(null);
+
+  useEffect(() => {
+    const el = heroVideoRef.current;
+    if (!el) return;
+    el.muted = true;
+    el.playsInline = true;
+    const tryPlay = () => {
+      el.play().catch(() => {});
+    };
+    if (el.readyState >= 2) {
+      tryPlay();
+      return;
+    }
+    const onCanPlay = () => {
+      tryPlay();
+      el.removeEventListener("canplay", onCanPlay);
+      el.removeEventListener("canplaythrough", onCanPlay);
+      el.removeEventListener("loadedmetadata", onCanPlay);
+    };
+    el.addEventListener("canplay", onCanPlay);
+    el.addEventListener("canplaythrough", onCanPlay);
+    el.addEventListener("loadedmetadata", onCanPlay);
+    return () => {
+      el.removeEventListener("canplay", onCanPlay);
+      el.removeEventListener("canplaythrough", onCanPlay);
+      el.removeEventListener("loadedmetadata", onCanPlay);
+    };
+  }, []);
 
   async function createLive() {
     setError("");
@@ -34,12 +63,14 @@ export default function Home() {
       <section className="rounded-lg border border-black/[.08] dark:border-white/[.145] overflow-hidden">
         <div className="relative aspect-video bg-black">
           <video
+            ref={heroVideoRef}
             src="/bardty-prodvid.mp4"
             className="w-full h-full object-cover"
             autoPlay
             muted
             loop
             playsInline
+            preload="auto"
             poster="/bardtylogo.jpg"
           />
         </div>
