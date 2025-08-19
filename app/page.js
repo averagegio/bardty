@@ -29,7 +29,23 @@ export default function Home() {
   }
 
   return (
-    <div className="grid gap-6 max-w-xl">
+    <>
+      {/* Hero video */}
+      <section className="rounded-lg border border-black/[.08] dark:border-white/[.145] overflow-hidden">
+        <div className="relative aspect-video bg-black">
+          <video
+            src="/bardty-prodvid.mp4"
+            className="w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster="/bardtylogo.jpg"
+          />
+        </div>
+      </section>
+
+      <div className="grid gap-6 max-w-xl">
       <div>
         <h1 className="text-2xl font-semibold mb-2">Go Live with Bardty</h1>
         <p className="text-sm text-foreground/70">Create a Mux live stream and start broadcasting instantly.</p>
@@ -61,6 +77,7 @@ export default function Home() {
           <div>Playback ID: <code className="opacity-80">{info.playback_id}</code></div>
         </div>
       ) : null}
-    </div>
+      </div>
+    </>
   );
 }
