@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Room, RoomEvent, createLocalVideoTrack, createLocalAudioTrack } from "livekit-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import MuxPlayer from "@mux/mux-player-react";
 
@@ -20,6 +21,9 @@ export default function LiveClient() {
   const [liveInfo, setLiveInfo] = useState(null);
   const chatRef = useRef(null);
   const videoRef = useRef(null);
+  const [room, setRoom] = useState(null);
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState("");
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -154,6 +158,49 @@ export default function LiveClient() {
     } finally {
       setLiveCreating(false);
     }
+  }
+
+  async function startLivekitPublish() {
+    setPublishError("");
+    setPublishing(true);
+    try {
+      const res = await fetch("/api/livekit/token", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: authUser?.sub || "host" }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.token || !data.url) {
+        setPublishError(data?.error || "Failed to get LiveKit token");
+        return;
+      }
+      const r = new Room();
+      r.on(RoomEvent.Disconnected, () => {
+        setPublishing(false);
+      });
+      await r.connect(data.url, data.token);
+      setRoom(r);
+      const [cam, mic] = await Promise.all([
+        createLocalVideoTrack(),
+        createLocalAudioTrack(),
+      ]);
+      await r.localParticipant.publishTrack(cam);
+      await r.localParticipant.publishTrack(mic);
+      if (videoRef.current) {
+        cam.attach(videoRef.current);
+        videoRef.current.muted = true;
+        await videoRef.current.play().catch(() => {});
+      }
+    } catch (e) {
+      setPublishError(e?.message || "Failed to publish to LiveKit");
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  async function stopLivekitPublish() {
+    try {
+      const current = room;
+      if (current) {
+        current.disconnect();
+      }
+    } catch {}
   }
 
   async function submitAuth() {
@@ -347,6 +394,33 @@ export default function LiveClient() {
             </div>
           </div>
           <div className="p-4">
+            <div className="rounded-md border border-black/[.08] dark:border-white/[.145] p-3 mb-4 text-xs grid gap-2">
+              <div className="font-medium">Go live (two options)</div>
+              <div className="grid gap-2 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <div className="font-medium">In browser (LiveKit)</div>
+                  <button
+                    onClick={startLivekitPublish}
+                    disabled={publishing}
+                    className="rounded-md bg-foreground text-background px-3 py-2 text-sm font-medium disabled:opacity-60"
+                  >{publishing ? 'Starting…' : 'Start camera'}</button>
+                  <button
+                    onClick={stopLivekitPublish}
+                    className="rounded-md border px-3 py-2 text-sm hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145]"
+                  >Stop</button>
+                  {publishError ? <div className="text-xs text-red-600">{publishError}</div> : null}
+                </div>
+                <div className="grid gap-2">
+                  <div className="font-medium">Stream with OBS (Mux RTMP)</div>
+                  <ol className="list-decimal pl-4 space-y-1">
+                    <li>Click Record to create a Mux stream.</li>
+                    <li>Copy Server and Stream key below.</li>
+                    <li>In OBS: Settings → Stream → Service: Custom → Server + Stream Key.</li>
+                    <li>Start Streaming. Watch via playback link.</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
             <div className="text-sm font-medium mb-3">Live now in {categories.find((c) => c.slug === selectedCat)?.label}</div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {(MOCK_CHANNELS[selectedCat] || []).map((ch) => (
