@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import BackgroundHeroVideo from "./components/BackgroundHeroVideo";
 
 export default function Home() {
   const router = useRouter();
@@ -59,21 +60,7 @@ export default function Home() {
 
   return (
     <>
-      {/* Background hero video */}
-      <section className="relative h-[50vh] sm:h-[60vh] rounded-lg border border-black/[.08] dark:border-white/[.145] overflow-hidden">
-        <video
-          ref={heroVideoRef}
-          src="/bardty-prodvid.mp4"
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          poster="/bardtylogo.jpg"
-        />
-        <div aria-hidden className="absolute inset-0 bg-black/30" />
-      </section>
+      <BackgroundHeroVideo />
 
       <div className="grid gap-6 max-w-xl">
       <div>
