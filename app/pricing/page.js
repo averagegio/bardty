@@ -1,3 +1,5 @@
+"use client";
+
 import PricingCard from "../components/PricingCard";
 import CheckoutSidebar from "../components/CheckoutSidebar";
 import { useState } from "react";
