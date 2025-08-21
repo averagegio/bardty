@@ -1,7 +1,19 @@
 import PricingCard from "../components/PricingCard";
+import CheckoutSidebar from "../components/CheckoutSidebar";
+import { useState } from "react";
 import { pricingPlans } from "@/lib/pricing";
 
 export default function PricingPage() {
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+
+  function handleSelect(plan) {
+    if (plan.id === "merchant" || plan.id === "enterprise") {
+      setSelectedPlan(plan);
+      setCheckoutOpen(true);
+    }
+  }
+
   return (
     <div className="grid gap-8">
       <div className="grid gap-2">
@@ -10,9 +22,12 @@ export default function PricingPage() {
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         {pricingPlans.map((plan) => (
-          <PricingCard key={plan.id} plan={plan} />
+          <div key={plan.id} onClick={() => handleSelect(plan)} className="cursor-pointer">
+            <PricingCard plan={plan} />
+          </div>
         ))}
       </div>
+      <CheckoutSidebar open={checkoutOpen} plan={selectedPlan} onClose={() => setCheckoutOpen(false)} />
     </div>
   );
 }
