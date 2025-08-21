@@ -24,9 +24,7 @@ export default function PricingPage() {
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         {pricingPlans.map((plan) => (
-          <div key={plan.id} onClick={() => handleSelect(plan)} className="cursor-pointer">
-            <PricingCard plan={plan} />
-          </div>
+          <PricingCard key={plan.id} plan={plan} onSelect={handleSelect} />
         ))}
       </div>
       <CheckoutSidebar open={checkoutOpen} plan={selectedPlan} onClose={() => setCheckoutOpen(false)} />
