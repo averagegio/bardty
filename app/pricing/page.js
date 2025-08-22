@@ -2,7 +2,7 @@
 
 import PricingCard from "../components/PricingCard";
 import CheckoutSidebar from "../components/CheckoutSidebar";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { pricingPlans } from "@/lib/pricing";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -37,6 +37,7 @@ export default function PricingPage() {
   }, [searchParams, router]);
 
   return (
+    <Suspense>
     <div className="grid gap-8">
       <div className="grid gap-2">
         <h1 className="text-2xl sm:text-3xl font-semibold">Pricing</h1>
@@ -55,6 +56,7 @@ export default function PricingPage() {
       </div>
       <CheckoutSidebar open={checkoutOpen} plan={selectedPlan} onClose={() => setCheckoutOpen(false)} />
     </div>
+    </Suspense>
   );
 }
 
