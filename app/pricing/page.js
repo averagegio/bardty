@@ -2,16 +2,14 @@
 
 import PricingCard from "../components/PricingCard";
 import CheckoutSidebar from "../components/CheckoutSidebar";
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { pricingPlans } from "@/lib/pricing";
-import { useSearchParams, useRouter } from "next/navigation";
+// Avoid useSearchParams to remove Suspense requirement during prerender
 
 export default function PricingPage() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [banner, setBanner] = useState(null);
-  const searchParams = useSearchParams();
-  const router = useRouter();
 
   function handleSelect(plan) {
     if (plan.id === "merchant" || plan.id === "enterprise") {
@@ -21,7 +19,8 @@ export default function PricingPage() {
   }
 
   useEffect(() => {
-    const s = searchParams.get("checkout");
+    if (typeof window === "undefined") return;
+    const s = new URLSearchParams(window.location.search).get("checkout");
     if (s === "success") {
       setBanner({ type: "success", text: "Payment successful. Your subscription is now active." });
       // Clean the URL
@@ -34,10 +33,9 @@ export default function PricingPage() {
       url.searchParams.delete("checkout");
       window.history.replaceState({}, "", url.toString());
     }
-  }, [searchParams, router]);
+  }, []);
 
   return (
-    <Suspense>
     <div className="grid gap-8">
       <div className="grid gap-2">
         <h1 className="text-2xl sm:text-3xl font-semibold">Pricing</h1>
@@ -56,7 +54,6 @@ export default function PricingPage() {
       </div>
       <CheckoutSidebar open={checkoutOpen} plan={selectedPlan} onClose={() => setCheckoutOpen(false)} />
     </div>
-    </Suspense>
   );
 }
 
