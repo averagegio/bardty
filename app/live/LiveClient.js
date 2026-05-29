@@ -10,6 +10,11 @@ export default function LiveClient() {
     { id: 1, user: "host", text: "Welcome to the Bardty live!" },
   ]);
   const [input, setInput] = useState("");
+  const [dmOpen, setDmOpen] = useState(false);
+  const [dmTo, setDmTo] = useState("");
+  const [dmText, setDmText] = useState("");
+  const [dmMessages, setDmMessages] = useState([]);
+  const dmRef = useRef(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login"); // 'login' | 'signup'
   const [authLoading, setAuthLoading] = useState(false);
@@ -108,6 +113,21 @@ export default function LiveClient() {
     })();
   }, []);
 
+  // DM SSE
+  useEffect(() => {
+    const me = authUser?.sub || "anon";
+    const source = new EventSource(`/api/chat/dm?user=${encodeURIComponent(me)}`);
+    source.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "dm") {
+          setDmMessages((prev) => [...prev, data]);
+        }
+      } catch {}
+    };
+    return () => source.close();
+  }, [authUser]);
+
   useEffect(() => {
     (async () => {
       if (!playbackId) return;
@@ -127,6 +147,17 @@ export default function LiveClient() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user: "you", text }),
+    });
+  }
+
+  async function sendDm() {
+    const text = dmText.trim();
+    if (!text || !dmTo.trim()) return;
+    setDmText("");
+    await fetch("/api/chat/dm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: dmTo.trim(), text, from: authUser?.sub || "you" }),
     });
   }
 
@@ -238,43 +269,8 @@ export default function LiveClient() {
   }
 
   return (
-    <div className="grid gap-4">
-      <div className="flex items-center gap-2 border-b border-black/[.08] dark:border-white/[.145] flex-wrap">
-        {categories.map((cat) => (
-          <button
-            key={cat.slug}
-            role="tab"
-            aria-selected={selectedCat === cat.slug}
-            onClick={() => {
-              const params = new URLSearchParams(Array.from(searchParams.entries()));
-              params.set("cat", cat.slug);
-              router.push(`/live?${params.toString()}`);
-            }}
-            className={`px-3 py-2 text-sm border-b-2 -mb-px ${
-              selectedCat === cat.slug ? "border-foreground font-medium" : "border-transparent text-foreground/70 hover:text-foreground"
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-        {authUser ? (
-          <button
-            aria-label="Create live stream"
-            onClick={createLive}
-            disabled={liveCreating}
-            className="ml-auto rounded-md border px-3 py-1 text-xs hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145] disabled:opacity-60"
-          >{liveCreating ? 'Creating…' : 'Record'}</button>
-        ) : (
-          <span className="ml-auto text-xs text-foreground/60">Sign in to record</span>
-        )}
-        <button
-          aria-label="Open menu"
-          onClick={() => setAuthOpen(true)}
-          className="mr-2 rounded-md border px-3 py-1 text-xs hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145]"
-        >
-          ☰
-        </button>
-      </div>
+    <div className="mt-16 grid gap-4">
+      {/* Minimal: remove local toolbar; global header provides nav */}
 
       {liveInfo ? (
         <div className="rounded-md border border-black/[.08] dark:border-white/[.145] p-3 text-xs grid gap-2">
@@ -445,7 +441,10 @@ export default function LiveClient() {
         </section>
 
         <aside className="rounded-lg border border-black/[.08] dark:border-white/[.145] flex flex-col min-h-[60vh]">
-          <div className="px-4 py-3 border-b border-black/[.08] dark:border-white/[.145] font-medium">Live Chat</div>
+          <div className="px-4 py-3 border-b border-black/[.08] dark:border-white/[.145] font-medium flex items-center gap-2">
+            <span>Live Chat</span>
+            <button onClick={() => setDmOpen((v) => !v)} className="ml-auto rounded-md border px-2 py-1 text-xs hover:bg-foreground/5 border-black/[.08] dark:border-white/[.145]">{dmOpen ? 'Close DMs' : 'Open DMs'}</button>
+          </div>
           <div ref={chatRef} className="flex-1 overflow-y-auto p-4 grid gap-2">
             {messages.map((m) => (
               <div key={m.id} className="text-sm">
@@ -463,6 +462,34 @@ export default function LiveClient() {
             />
             <button onClick={sendMessage} className="rounded-md bg-foreground text-background px-4 py-2 text-sm font-medium">Send</button>
           </div>
+          {dmOpen && (
+            <div className="border-t border-black/[.08] dark:border-white/[.145] grid">
+              <div className="p-3 text-sm font-medium">Direct Messages</div>
+              <div className="max-h-48 overflow-y-auto px-3 pb-2 grid gap-2">
+                {dmMessages.map((m, i) => (
+                  <div key={i} className="text-xs">
+                    <span className="font-medium mr-2">{m.from} → {m.to}:</span>
+                    <span className="text-foreground/80">{m.text}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="p-3 flex gap-2 border-t border-black/[.08] dark:border-white/[.145]">
+                <input
+                  value={dmTo}
+                  onChange={(e) => setDmTo(e.target.value)}
+                  placeholder="Send to username"
+                  className="w-40 rounded-md border border-black/[.08] dark:border-white/[.145] px-3 py-2 text-xs bg-background"
+                />
+                <input
+                  value={dmText}
+                  onChange={(e) => setDmText(e.target.value)}
+                  placeholder="Type a DM"
+                  className="flex-1 rounded-md border border-black/[.08] dark:border-white/[.145] px-3 py-2 text-xs bg-background"
+                />
+                <button onClick={sendDm} className="rounded-md bg-foreground text-background px-3 py-2 text-xs font-medium">Send DM</button>
+              </div>
+            </div>
+          )}
         </aside>
       </div>
     </div>
