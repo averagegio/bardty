@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 
 export default function HeaderNav() {
@@ -10,12 +11,13 @@ export default function HeaderNav() {
       <header className="absolute top-0 z-50 w-full bg-transparent border-transparent">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img
+            <Image
               src="/bardtylogo.jpg"
               alt="Bardty logo"
               width={28}
               height={28}
               className="rounded-sm select-none pointer-events-none"
+              priority
             />
             <span className="font-semibold text-lg tracking-tight">bardty</span>
           </Link>
