@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { pricingPlans } from "@/lib/pricing";
 
@@ -90,10 +91,13 @@ export default function HomePage() {
         className="relative isolate min-h-screen w-full overflow-hidden"
         style={{ height: "100dvh" }}
       >
-        <img
+        <Image
           src="/bardty-prodgif.gif"
           alt="Bardty hero"
-          className="absolute inset-0 h-full w-full object-cover select-none pointer-events-none"
+          fill
+          priority
+          unoptimized
+          className="select-none pointer-events-none object-cover"
         />
         {/* Branding overlay near bottom - left aligned, Helvetica Neue */}
         <div
